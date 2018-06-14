@@ -27,6 +27,7 @@ let CartCount = 0;
 var _UserOrder;
 var CARTTmpArray;
 let array = [];
+var date;
 
 var client = mqtt.connect('mqtt://jnadtechmqtt.com', options);
 
@@ -41,6 +42,18 @@ client.on('message', function (topic, message) {
         // mqttData
         if (String(mqttData) != "") {
             console.log("mqtt_success");
+            // date = [];
+            // MeteorEach = [];
+            // array = [];
+            // foodlist = ""
+            MeteorEach = [];
+            Cart = [];
+            TotalMoney = 0;
+            CartCount = 0;
+            _UserOrder = "";
+            CARTTmpArray = "";
+            array = [];
+            date = "";
             resolve(mqttData);
         } else {
             console.log("mqtt_no");
@@ -65,8 +78,16 @@ client.on('message', function (topic, message) {
         });
 
         OrderPromise.then((value) => {
+
             _UserOrder.forEach((_UserOrderElem, _UserOrderIndex) => {
                 CARTTmpArray = _UserOrderElem.foodlist;
+                // console.log(new Date(_UserOrderElem.date));
+                // console.log(new Date(_UserOrderElem.date).toLocaleTimeString());
+                // toLocaleDateString()
+                // console.log(new Date(_UserOrderElem.date).toLocaleDateString());
+                date = _UserOrderElem.date.toLocaleDateString() + " " + _UserOrderElem.date.toLocaleTimeString();
+                console.log(date);
+
             });
 
             CARTTmpArray.forEach(function (elem, index) {
@@ -104,6 +125,7 @@ client.on('message', function (topic, message) {
                                 });
 
                             });
+
                             MeteorEach.push({
                                 SingleOrDouble: 1, // 1=單點 ,0=套餐
                                 head: CartCount + '.' + _SingleOrDouble[1],
@@ -112,7 +134,7 @@ client.on('message', function (topic, message) {
                                 sauce: "" + _sauce,
                                 // money: "NT$ " + SSFelem.money,
                                 money: SSFelem.money,
-                                path: index
+                                path: index,
                             });
                             // console.log("單點" + JSON.stringify(MeteorEach));
                             TotalMoney += parseInt(SSFelem.money);
@@ -123,6 +145,8 @@ client.on('message', function (topic, message) {
                     const _elem0_dv = _elem0.dv; // 副餐
                     const _elem0_dd = _elem0.dd; // 飲品 濃湯
                     const _elem0_st = _elem0.st; // 原味 糖 冰塊
+                    const _elem0_date = _elem0; // 原味 糖 冰塊
+
 
                     // 主食 主食甜品 價錢 
                     const First_SDF = Mongo_ShopDoubleFood.find({
@@ -183,7 +207,11 @@ client.on('message', function (topic, message) {
                                                 drink: DNelem.zh + TmpSauce,
                                                 // money: "NT$ " + _elem0_df.money,
                                                 money: _elem0_df.money,
+
                                             });
+
+                                            // console.log("套餐" + JSON.stringify(MeteorEach));
+
                                             TotalMoney += parseInt(_elem0_df.money);
                                         });
                                     });
@@ -207,13 +235,16 @@ client.on('message', function (topic, message) {
             // console.log(userInfo);
             // console.log(userInfo[0].user_school_mail_id);
             // console.log(userInfo[0].import.phone);
+            // console.log()
             // console.log("----------");
 
             array[2] = "電話 : " + userInfo[0].import.phone + "\n";
             array[3] = "學號 : " + userInfo[0].user_school_mail_id + "\n";
-            array[4] = "--------------\n";
+            array[4] = "日期:  " + date + "\n";
+            array[5] = "--------------\n";
 
             for (var i = 0; i < MeteorEach.length; i++) {
+                // console.log("time " + MeteorEach[i]['time'])
                 if (MeteorEach[i]['SingleOrDouble'] == 1) {
                     array.push(MeteorEach[i]['head'] + "\n");
                     array.push(MeteorEach[i]['name'] + "\n");
@@ -233,6 +264,8 @@ client.on('message', function (topic, message) {
                 }
             }
             array.push("總價 NT：" + TotalMoney + "\n");
+            // console.log(array);
+            // /*
             let foodlist = array;
             let myDate = new Date();
             let time = myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() +
@@ -255,6 +288,15 @@ client.on('message', function (topic, message) {
                 if (err) {
                     return console.log(err);
                 };
+                let initCmd = "cancel -a"
+                exec(initCmd, function (error, stdout, stderr) {
+                    if (error) {
+                        console.error('error: ' + error);
+                        return;
+                    }
+                    console.log('stdout: ' + stdout);
+                    console.log('stderr: ' + typeof stderr);
+                });
                 // 這邊應該可以直接導向不用在經過腳本，他應該可以直接下腳本。
                 // let cmd = "cat " + path + "|" + "grep 學號";
                 // let cmd = "cat " + path;
@@ -272,6 +314,7 @@ client.on('message', function (topic, message) {
             });
 
 
+
         }, (reason) => {
             console.log("reason: " + reason);
         });
@@ -280,4 +323,6 @@ client.on('message', function (topic, message) {
     });
 
 });
+
+// console.log(new Date(1528419565))
 
